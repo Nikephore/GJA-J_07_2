@@ -88,22 +88,33 @@ AFND * AFNDMinimiza(AFND * afnd){
                     for (l = 0; l < AFNDNumEstados(afnd); l++){
 
                         if(AFNDTransicionIndicesEstadoiSimboloEstadof(afnd, j, k, l) == 1){
+
+                        /*Creamos la matriz con las clases de los estados a los que transita nuestro estado actual*/
                         ttran[j][k] = EstadoEnClase(l);
                         }
                     }   
                 }
             }
         
-  
+            /*Creamos un array con el cual crearemos la division de clases de la clase actual*/
             clases = (int*)calloc(checkpoint[i+1] - checkpoint[i], sizeof(int));
             clases[0] = 0;
             cont = 1;
+
 
             for(j = 1; j < numero_valores(clases); j++){
 
                 flag = 1;
 
+                /**
+                 * Comparamos cada estado con los anteriores
+                 * Si su array de transiciones es igual al de otro estado
+                 * pertenece a su misma clase. Si no coincide con ningun 
+                 * otro array creamos una clase nueva con el valor de cont.
+                 * */
                 for(k = j-1; k <= 0; k--){
+
+                    
                     if(comparar_arrays(ttran[j], ttran[k]) == 0){ 
                         clases[j] = clases[k];
                         flag = 0;
@@ -118,7 +129,22 @@ AFND * AFNDMinimiza(AFND * afnd){
 
             }
 
-            if(cont > 1){ /*Si la clase inicial se divide en mas de una*/
+            /*Si de la clase actual se han sacado 2 clases o mas hacemos lo siguiente*/
+            if(cont > 1){
+
+                /**
+                 * Reordenamos la tabla para que cada clase este separada del resto
+                 * Ejemplo: 
+                 * Tabla [0, 1, 2,3, 4, 5, 6, 7]
+                 * Clase 0 [0, 1, 2, 3, 4]
+                 * 
+                 * Tras ejecutar el algoritmo la clase se divide en [0, 1, 4] y [2, 3]
+                 * 
+                 * Reordenamos la tabla para que quede asi:
+                 * 
+                 * Tabla [0, 1, 4, 2, 3, 5, 6, 7]
+                 * */
+                
                 tabla = claseSort(clases, tabla, checkpoint[i], checkpoint[j]);
                 clases = arraySort(clases);
 
