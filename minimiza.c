@@ -57,6 +57,7 @@ AFND * AFNDMinimiza(AFND * afnd){
      * 
      * clase 0 : [0, 1, 2, 3, 4] ; clase 1 : [5, 6, 7]
      * 
+     * 
      * De esta forma checkpoint[i+1] - checkpoint[i] corresponde al numero de estados que hay en la clase i
      * 
      * checkpoint[0+1] - checkpoint[0] = 5 - 0 = 5 (que es el numero de estados que hay en la clase 0)
@@ -81,7 +82,7 @@ AFND * AFNDMinimiza(AFND * afnd){
 
             for(j = 0; j < checkpoint[i+1] - checkpoint[i]; j++){
 
-                ttran[j] = (int**)calloc(AFNDNumSimbolos(afnd), sizeof(int*));
+                ttran[j] = (int*)calloc(AFNDNumSimbolos(afnd), sizeof(int));
 
                 for(k = 0; k < AFNDNumSimbolos(afnd); k++){
 
@@ -98,9 +99,10 @@ AFND * AFNDMinimiza(AFND * afnd){
         
             /*Creamos un array con el cual crearemos la division de clases de la clase actual*/
             clases = (int*)calloc(checkpoint[i+1] - checkpoint[i], sizeof(int));
-            clases[0] = 0;
-            cont = 1;
 
+            cont = 0;
+            clases[0] = cont;
+            cont ++;
 
             for(j = 1; j < numero_valores(clases); j++){
 
@@ -112,9 +114,8 @@ AFND * AFNDMinimiza(AFND * afnd){
                  * pertenece a su misma clase. Si no coincide con ningun 
                  * otro array creamos una clase nueva con el valor de cont.
                  * */
-                for(k = j-1; k <= 0; k--){
+                for(k = j-1; k >= 0; k--){
 
-                    
                     if(comparar_arrays(ttran[j], ttran[k]) == 0){ 
                         clases[j] = clases[k];
                         flag = 0;
@@ -135,25 +136,27 @@ AFND * AFNDMinimiza(AFND * afnd){
                 /**
                  * Reordenamos la tabla para que cada clase este separada del resto
                  * Ejemplo: 
-                 * Tabla [0, 1, 2,3, 4, 5, 6, 7]
+                 * Tabla [0, 1, 2, 3, 4, 5, 6, 7]
                  * Clase 0 [0, 1, 2, 3, 4]
                  * 
-                 * Tras ejecutar el algoritmo la clase se divide en [0, 1, 4] y [2, 3]
+                 * Tras ejecutar el algoritmo la clase se divide (por ejemplo) en [0, 1, 4] y [2, 3]
                  * 
                  * Reordenamos la tabla para que quede asi:
                  * 
-                 * Tabla [0, 1, 4, 2, 3, 5, 6, 7]
+                 * Tabla [|0, 1, 4,| 2, 3,| 5, 6, 7|]
                  * */
                 
                 tabla = claseSort(clases, tabla, checkpoint[i], checkpoint[j]);
                 clases = arraySort(clases);
 
                 /*Falta realizar gestion de los checkpoints*/
+
             }
             free_double_pointer(ttran);
         }      
     }
 
+    /*Crear nuevo AFD con los valores de Tabla*/
     free_double_pointer(tabla);
 }
 
@@ -273,6 +276,8 @@ int * arraySort(int * number){
     return number;
 }
 
+/*clases[0, 0, 1]*/
+/*tabla [|5, 7,| 6|]*/
 
 /*
     clase 1 [1, 3, 5]
