@@ -383,3 +383,22 @@ int listPrint (FILE *fd, const List* list){
 
   return k;
 }
+void* list_copy(const List* p) {
+  /*
+    List* copy = NULL;
+    if(!p) return NULL;
+
+    copy = (int *)malloc(sizeof(List));
+    if(!copy);
+
+    *copy = *(List*)p;
+  */
+    return (void*)p;
+}
+
+
+int list_cmp(const List* p, const List* q) {
+    if(!p || !q) return -2;
+
+    return 0;
+}

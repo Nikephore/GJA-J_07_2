@@ -63,5 +63,9 @@ int listSize (const List* list);
 /* Imprime una lista devolviendo el número de caracteres escritos. */
 int listPrint (FILE *fd, const List* list);
 
+void* list_copy(const List* l);
+
+int list_cmp(const List* p, const List* q);
+
 
 #endif
