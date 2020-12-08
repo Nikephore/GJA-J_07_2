@@ -1,2 +1,6 @@
 digraph af1  { rankdir=LR;
 	_invisible [style="invis"];
+	TEST [penwidth="2"];
+	_invisible -> TEST ;
+	TEST -> TEST [label="0"];
+}
