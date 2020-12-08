@@ -10,18 +10,19 @@ int *claseSort(int *c, int *t, int ini, int fin);
 int valor_maximo(int *a);
 int numero_valores(int* array);
 int numero_valores_distintos(int* array);
-void free_double_pointer(int** tabla);
+void free_double_pointer(int** tabla, int limite);
 int comparar_arrays(int *p, int *q);
 int estadoEnClase(int x, int *check, int *tabla);
 int *arraySort(int * number);
 char* itoa(int val, int base);
 void arrayPrint(char *n, int *a);
+int arraySize(int * tabla);
 
 
 /*FUNCION PRINCIPAL*/
 AFND * AFNDMinimiza(AFND * afnd){
     int i, j, k, l, numcheck, cont, tcont = 0;
-    int ini, fin, x = 0, flag = 0;
+    int ini, fin, x = 0, flag = 0, limite=0;
     int * tabla = NULL;
     int * checkpoint = NULL;
     int * clases = NULL;
@@ -33,13 +34,13 @@ AFND * AFNDMinimiza(AFND * afnd){
     tabla = (int*)calloc(AFNDNumEstados(afnd), sizeof(int));
     if(!tabla) return NULL;
 
-    printf("tamanio inicial: %ld\n", sizeof(tabla));
+    printf("tamanio inicial: %d\n", arraySize(tabla));
 
     /*usamos marcadores para dividir las clases del automata*/
     checkpoint = (int*)calloc(3, sizeof(int));
     if(!checkpoint) return NULL;
 
-    printf("tamanio check: %ld\n", sizeof(checkpoint));
+    printf("tamanio check: %d\n", arraySize(checkpoint));
 
     /*El primer marcador corresponde al primer indice de tabla | x = 0*/
     checkpoint[x] = 0;
@@ -51,8 +52,8 @@ AFND * AFNDMinimiza(AFND * afnd){
         if(AFNDTipoEstadoEn(afnd, i) == FINAL || AFNDTipoEstadoEn(afnd, i) == INICIAL_Y_FINAL){
             tabla[j]= i;
             printf("%d \n", tabla[j]);
-            j++; 
-        } 
+            j++;
+        }
     }
 
     arrayPrint("tablafinales", tabla);
@@ -64,7 +65,7 @@ AFND * AFNDMinimiza(AFND * afnd){
         if(AFNDTipoEstadoEn(afnd, i) == NORMAL || AFNDTipoEstadoEn(afnd, i) == INICIAL){
             tabla[j]= i;
             printf("%d \n", tabla[j]);
-            j++; 
+            j++;
         }
     }
     /*El ultimo marcador corresponde al ultimo indice de tabla | x = 2*/
@@ -79,16 +80,16 @@ AFND * AFNDMinimiza(AFND * afnd){
 
     /**
      * Ejemplo, en [0, 1, 2, 3, 4, 5, 6, 7] Siendo de 0 a 4 estados NO finales y de 5 a 7 estados finales
-     * 
-     * checkpoint[0] = 0; checkpoint[1] = 5; checkpoint[2] = 8 
-     * 
+     *
+     * checkpoint[0] = 0; checkpoint[1] = 5; checkpoint[2] = 8
+     *
      * clase 0 : [0, 1, 2, 3, 4] ; clase 1 : [5, 6, 7]
-     * 
-     * 
+     *
+     *
      * De esta forma checkpoint[i+1] - checkpoint[i] corresponde al numero de estados que hay en la clase i
-     * 
+     *
      * checkpoint[0+1] - checkpoint[0] = 5 - 0 = 5 (que es el numero de estados que hay en la clase 0)
-     * 
+     *
     **/
 
    /*Mientras no se creen nuevas clases realizamos el bucle*/
@@ -120,10 +121,10 @@ AFND * AFNDMinimiza(AFND * afnd){
                         /*Creamos la matriz con las clases de los estados a los que transita nuestro estado actual*/
                         ttran[j][k] = estadoEnClase(l, checkpoint, tabla);
                         }
-                    }   
+                    }
                 }
             }
-        
+
             /*Creamos un array con el cual crearemos la division de clases de la clase actual*/
             clases = (int*)calloc(checkpoint[i+1] - checkpoint[i], sizeof(int));
 
@@ -138,15 +139,15 @@ AFND * AFNDMinimiza(AFND * afnd){
                 /**
                  * Comparamos cada estado con los anteriores
                  * Si su array de transiciones es igual al de otro estado
-                 * pertenece a su misma clase. Si no coincide con ningun 
+                 * pertenece a su misma clase. Si no coincide con ningun
                  * otro array creamos una clase nueva con el valor de cont.
                  * */
                 for(k = j-1; k >= 0; k--){
 
-                    if(comparar_arrays(ttran[j], ttran[k]) == 0){ 
+                    if(comparar_arrays(ttran[j], ttran[k]) == 0){
                         clases[j] = clases[k];
                         flag = 0;
-                        break; /*salir del for actual*/     
+                        break; /*salir del for actual*/
                     }
                 }
 
@@ -162,18 +163,18 @@ AFND * AFNDMinimiza(AFND * afnd){
 
                 /**
                  * Reordenamos la tabla para que cada clase este separada del resto
-                 * Ejemplo: 
+                 * Ejemplo:
                  * Tabla [0, 1, 2, 3, 4, 5, 6, 7]
                  * Clase 0 [0, 1, 2, 3, 4]
-                 * 
+                 *
                  * Tras ejecutar el algoritmo la clase se divide (por ejemplo) en [0, 1, 4] y [2, 3]
-                 * 
+                 *
                  * Reordenamos la tabla para que quede asi:
-                 * 
+                 *
                  * Tabla [|0, 1, 4,| 2, 3,| 5, 6, 7|]
                  *       c0=0     c3=3   c1=5     c2=8
                  * */
-                
+
                 ini = checkpoint[i];
                 fin = checkpoint[j];
 
@@ -192,14 +193,15 @@ AFND * AFNDMinimiza(AFND * afnd){
                         l++;
                     }
                 }
-                
+
                 checkpoint = arraySort(checkpoint);
 
             }
 
             free(clases);
-            free_double_pointer(ttran);
-        }      
+            limite=checkpoint[i+1] - checkpoint[i];
+            free_double_pointer(ttran,limite);
+        }
     }
 
     /*Crear nuevo AFD con los valores de Tabla*/
@@ -215,7 +217,7 @@ AFND * AFNDMinimiza(AFND * afnd){
     for(i = 0; i < numero_valores(checkpoint) -1; i++){
         nombre = itoa(i, DECIMAL);
         nombre = strcat(nombre, "q");
-        
+
 
         AFNDInsertaEstado(ret, nombre, AFNDTipoEstadoEn(afnd, tabla[checkpoint[i]]));
     }
@@ -228,7 +230,7 @@ AFND * AFNDMinimiza(AFND * afnd){
                     AFNDInsertaTransicion(ret, nombre, AFNDSimboloEn(ret, j), nombre);
                 }
             }
-            
+
         }
     }
     */
@@ -297,7 +299,7 @@ int numero_valores_distintos(int* array){
     int i, x = 0;
     if(!array) return -1;
 
-    
+
     for(i = 0; i < numero_valores(array) - 1; i++){
         if(array[i] != array[i+1]) x++;
     }
@@ -305,14 +307,14 @@ int numero_valores_distintos(int* array){
     return x;
 }
 
-void free_double_pointer(int ** dp){
+void free_double_pointer(int ** dp, int limite){
     int i = 0;
     if(!dp) return;
 
-    while(dp[i] != NULL){
+    while(i<limite && dp[i]!=NULL ){
         free(dp[i]);
         i++;
-    } 
+    }
 
     free(dp);
 
@@ -324,7 +326,7 @@ int comparar_arrays(int *p, int *q){
 
     if(!p || !q){
         printf("Error en comparar arrays!!\n");
-        return -1;    
+        return -1;
     }
 
     if(numero_valores(p) != numero_valores(q)){
@@ -381,17 +383,17 @@ int * arraySort(int * number){
 }
 
 char* itoa(int val, int base){
-	
+
 	static char buf[32] = {0};
-	
+
 	int i = 30;
-	
+
 	for(; val && i ; --i, val /= base)
-	
+
 		buf[i] = "0123456789abcdef"[val % base];
-	
+
 	return &buf[i+1];
-	
+
 }
 
 void arrayPrint(char *n, int *a){
@@ -399,7 +401,7 @@ void arrayPrint(char *n, int *a){
     if(!n || !a) return;
 
     printf("%s: [", n);
-    
+
     for(i = 0; i < numero_valores(a); i++){
         printf("%d, ", a[i]);
     }
@@ -407,6 +409,20 @@ void arrayPrint(char *n, int *a){
 
     return;
 }
+
+
+int arraySize(int * tabla){
+    int i=0;
+    if (!tabla) return -1;
+    while(tabla[i]){
+        i++;
+    }
+
+    return i;
+}
+
+
+
 /*clases[0, 0, 1]*/
 /*tabla [|5, 7,| 6|]*/
 

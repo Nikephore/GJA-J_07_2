@@ -1,7 +1,7 @@
 #ifndef MINIMIZA_H
 #define MINIMIZA_H
 
-#include "AFND.h"
+#include "afnd.h"
 
 AFND * AFNDMinimiza(AFND * afnd);
 

@@ -30,3 +30,6 @@ exe:
 
 clean:
 	rm -rf *.o $(EJS)
+
+foto:
+	dot -Tpng af1.dot -o minimiza.png
