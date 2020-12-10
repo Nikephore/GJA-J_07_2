@@ -4,6 +4,8 @@
 #include <string.h>
 
 #define DECIMAL 10
+#define CHECK 3
+#define FIN -2
 
 /*FUNCIONES PRIVADAS*/
 int *claseSort(int *c, int *t, int ini, int fin);
@@ -16,7 +18,8 @@ int estadoEnClase(int x, int *check, int *tabla);
 int *arraySort(int * number);
 char* itoa(int val, int base);
 void arrayPrint(char *n, int *a);
-int arraySize(int * tabla);
+int* arrayIni(int tam);
+int *arrayAjustar(int *checkpoint, int tam);
 
 
 /*FUNCION PRINCIPAL*/
@@ -27,25 +30,23 @@ AFND * AFNDMinimiza(AFND * afnd){
     int * checkpoint = NULL;
     int * clases = NULL;
     int ** ttran = NULL;
-    char *nombre = "";
+    /*char *nombre = "";*/
     AFND *ret = NULL;
 
     /*Nestros estados del AFD pasarán a estar en un array de enteros*/
-    tabla = (int*)calloc(AFNDNumEstados(afnd), sizeof(int));
-    if(!tabla) return NULL;
+    tabla =arrayIni(AFNDNumEstados(afnd));
 
-    printf("tamanio inicial: %d\n", arraySize(tabla));
+    printf("tamanio inicial: %d\n", numero_valores(tabla));
 
     /*usamos marcadores para dividir las clases del automata*/
-    checkpoint = (int*)calloc(3, sizeof(int));
-    if(!checkpoint) return NULL;
+    checkpoint = arrayIni(CHECK);
 
-    printf("tamanio check: %d\n", arraySize(checkpoint));
+    printf("tamanio check: %d\n", numero_valores(checkpoint));
 
     /*El primer marcador corresponde al primer indice de tabla | x = 0*/
     checkpoint[x] = 0;
     x++;
-
+    printf("tamanio check: %d\n", numero_valores(checkpoint));
     /*Introducimos los valores del afd en nuestro array*/
     j = 0;
     for(i = 0; i < AFNDNumEstados(afnd); i++){
@@ -54,9 +55,10 @@ AFND * AFNDMinimiza(AFND * afnd){
             printf("%d \n", tabla[j]);
             j++;
         }
-    }
 
-    arrayPrint("tablafinales", tabla);
+    }
+    printf("\n");
+
     /*El segundo marcador corresponde al valor donde se dividen las clases | x = 1*/
     checkpoint[x] = j;
     x++;
@@ -67,15 +69,18 @@ AFND * AFNDMinimiza(AFND * afnd){
             printf("%d \n", tabla[j]);
             j++;
         }
+
     }
+    printf("\n");
     /*El ultimo marcador corresponde al ultimo indice de tabla | x = 2*/
     checkpoint[x] = j;
     x++;
     /*x = 3*/
 
-    arrayPrint("check", checkpoint);
-    arrayPrint("tabla", tabla);
-
+    arrayPrint("check\t", checkpoint);
+    printf("tamanio inicial: %d\n", numero_valores(checkpoint));
+    arrayPrint("tabla\t", tabla);
+    printf("tamanio inicial: %d\n", numero_valores(tabla));
 
 
     /**
@@ -110,7 +115,7 @@ AFND * AFNDMinimiza(AFND * afnd){
 
             for(j = 0; j < checkpoint[i+1] - checkpoint[i]; j++){
 
-                ttran[j] = (int*)calloc(AFNDNumSimbolos(afnd), sizeof(int));
+                ttran[j] = arrayIni(AFNDNumSimbolos(afnd));
 
                 for(k = 0; k < AFNDNumSimbolos(afnd); k++){
 
@@ -126,7 +131,7 @@ AFND * AFNDMinimiza(AFND * afnd){
             }
 
             /*Creamos un array con el cual crearemos la division de clases de la clase actual*/
-            clases = (int*)calloc(checkpoint[i+1] - checkpoint[i], sizeof(int));
+            clases = arrayIni(checkpoint[i+1] - checkpoint[i]);
 
             cont = 0;
             clases[0] = cont;
@@ -183,7 +188,11 @@ AFND * AFNDMinimiza(AFND * afnd){
 
                 numcheck = numero_valores(checkpoint) + numero_valores_distintos(clases) - 1;
 
-                checkpoint = (int*)realloc(checkpoint, numcheck);
+                checkpoint = arrayAjustar(checkpoint,numcheck);
+                /*(int*)realloc(checkpoint, numcheck);*/
+                /*Ajuste de tam*/
+
+
 
                 l = ini;
                 for(k = 0; k < numero_valores(clases) - 1; k++){
@@ -286,11 +295,15 @@ int valor_maximo(int *a){
 }
 
 int numero_valores(int* array){
-    int i;
-    if(!array) return -1;
+    int i=0;
+    if (!array) return -1;
+    while(array[i]!=-1){
+        if(array[i]==FIN){
+            break;
+        }
 
-    i = sizeof(array) / sizeof(int);
-
+        i++;
+    }
     return i;
 }
 
@@ -410,18 +423,33 @@ void arrayPrint(char *n, int *a){
     return;
 }
 
+int* arrayIni(int tam){
+    int *array= NULL, i=0;
+    if(tam<0) return NULL;
 
-int arraySize(int * tabla){
-    int i=0;
-    if (!tabla) return -1;
-    while(tabla[i]){
-        i++;
+    array = (int*)calloc(tam+1, sizeof(int));
+    if(!array) return NULL;
+
+    for(i=0;i<tam;i++){
+        array[i]=-1;
     }
+    array[i]=FIN;
 
-    return i;
+    return array;
 }
 
 
+int *arrayAjustar(int *checkpoint, int tam){
+    int i=0, *array=NULL;
+    if(!checkpoint) return NULL;
+
+    array=arrayIni(tam);
+
+    for(i=0;i<numero_valores(checkpoint);i++){
+        array[i]=checkpoint[i];
+    }
+    return array;
+}
 
 /*clases[0, 0, 1]*/
 /*tabla [|5, 7,| 6|]*/
