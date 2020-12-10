@@ -136,8 +136,7 @@ AFND * AFNDMinimiza(AFND * afnd){
             cont = 0;
             clases[0] = cont;
             cont ++;
-
-            for(j = 1; j < numero_valores(clases); j++){
+            for(j = 1; j < checkpoint[i+1] - checkpoint[i]; j++){
 
                 flag = 1;
 
@@ -181,12 +180,16 @@ AFND * AFNDMinimiza(AFND * afnd){
                  * */
 
                 ini = checkpoint[i];
-                fin = checkpoint[j];
+                fin = checkpoint[i+1];
 
                 tabla = claseSort(clases, tabla, ini, fin);
                 clases = arraySort(clases);
 
                 numcheck = numero_valores(checkpoint) + numero_valores_distintos(clases) - 1;
+                printf("\n");
+                arrayPrint("CHEckAWUI", checkpoint);
+                printf("numcheck:%d\tnumvalores:%d\n",numcheck,numero_valores(checkpoint));
+                printf("Nuero distintos:%d\n",numero_valores_distintos(clases));
 
                 checkpoint = arrayAjustar(checkpoint,numcheck);
                 /*(int*)realloc(checkpoint, numcheck);*/
@@ -263,9 +266,18 @@ int * claseSort(int *c, int *t, int ini, int fin){
         return NULL;
     }
 
-    for(i = 0; i < valor_maximo(c); i++){
+    aux=arrayIni(numero_valores(c));
+
+    printf("Ini:%d\n", ini);
+    arrayPrint("CLASES", c);
+    arrayPrint("T:", t);
+    printf("numero_valores:%d\n",numero_valores(c) );
+    l = 0;
+    for(i = 0; i <= valor_maximo(c); i++){
         k = ini;
-        l = 0;
+
+        /*[0, 0, 0, 1, 0, 0, 0, 1, 0, ]*/
+        /*AUX: []*/
         for(j = 0; j < numero_valores(c); j++){
             if(c[j] == i){
                 aux[l] = t[k];
@@ -274,10 +286,14 @@ int * claseSort(int *c, int *t, int ini, int fin){
             k++;
         }
     }
+    arrayPrint("AUX:", aux);
 
-    for(i = 0; i < numero_valores(c); i++){
-        t[i] = aux[i];
+
+    for(i = 0, k=ini; i < numero_valores(c); i++,k++){
+        t[k] = aux[i];
     }
+
+    arrayPrint("TABLA2.0", t);
 
     free(aux);
 
@@ -312,7 +328,7 @@ int numero_valores_distintos(int* array){
     int i, x = 0;
     if(!array) return -1;
 
-
+    arrayPrint("FUNCION VALORES DISTINTOS", array);
     for(i = 0; i < numero_valores(array) - 1; i++){
         if(array[i] != array[i+1]) x++;
     }
@@ -382,8 +398,8 @@ int * arraySort(int * number){
         return NULL;
     }
 
-    for (i = 0; i < numero_valores(number); ++i){
-        for (j = i + 1; j < numero_valores(number); ++j){
+    for (i = 0; i < numero_valores(number); i++){
+        for (j = i + 1; j < numero_valores(number); j++){
             if (number[i] > number[j]){
                     a =  number[i];
                     number[i] = number[j];
@@ -445,9 +461,14 @@ int *arrayAjustar(int *checkpoint, int tam){
 
     array=arrayIni(tam);
 
+    printf("\n");
+    arrayPrint("checkpoint", checkpoint);
+    printf("TAM+:%d",tam);
+
     for(i=0;i<numero_valores(checkpoint);i++){
         array[i]=checkpoint[i];
     }
+    arrayPrint("arrayAjustar", array);
     return array;
 }
 
