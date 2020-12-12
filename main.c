@@ -14,8 +14,6 @@ int main(int argc, char ** argv)
 	AFNDInsertaSimbolo(p_afnd,"0");
 	AFNDInsertaSimbolo(p_afnd,"1");
 
-
-	
 	AFNDInsertaEstado(p_afnd,"q0",INICIAL_Y_FINAL);
 	AFNDInsertaEstado(p_afnd,"q1",NORMAL);
 	AFNDInsertaEstado(p_afnd,"q2",NORMAL);
@@ -28,7 +26,6 @@ int main(int argc, char ** argv)
 	AFNDInsertaEstado(p_afnd,"q9",NORMAL);
 	AFNDInsertaEstado(p_afnd,"q10",NORMAL);
 	AFNDInsertaEstado(p_afnd,"q11",NORMAL);
-
 
 	AFNDInsertaTransicion(p_afnd, "q0", "0", "q1");
 	AFNDInsertaTransicion(p_afnd, "q0", "1", "q1");
