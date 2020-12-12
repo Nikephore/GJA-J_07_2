@@ -1,6 +1,19 @@
 digraph af1  { rankdir=LR;
 	_invisible [style="invis"];
-	TEST [penwidth="2"];
-	_invisible -> TEST ;
-	TEST -> TEST [label="0"];
+	C [penwidth="2"];
+	A;
+	G;
+	B;
+	D;
+	_invisible -> A ;
+	C -> A [label="0"];
+	C -> C [label="1"];
+	A -> B [label="0"];
+	A -> D [label="1"];
+	G -> G [label="0"];
+	G -> A [label="1"];
+	B -> G [label="0"];
+	B -> C [label="1"];
+	D -> C [label="0"];
+	D -> G [label="1"];
 }

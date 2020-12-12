@@ -19,7 +19,8 @@ int *arraySort(int * number);
 char* itoa(int val, int base);
 void arrayPrint(char *n, int *a);
 int* arrayIni(int tam);
-int *arrayAjustar(int *checkpoint, int tam);
+int *arrayAjustar(int *checkpoint, int tamI, int tamF);
+int obtenerEstado(AFND *afnd, int *tabla, int *checkpoint, int x);
 
 
 /*FUNCION PRINCIPAL*/
@@ -30,29 +31,23 @@ AFND * AFNDMinimiza(AFND * afnd){
     int * checkpoint = NULL;
     int * clases = NULL;
     int ** ttran = NULL;
-    /*char *nombre = "";*/
     AFND *ret = NULL;
 
     /*Nestros estados del AFD pasarán a estar en un array de enteros*/
     tabla =arrayIni(AFNDNumEstados(afnd));
 
-    printf("tamanio inicial: %d\n", numero_valores(tabla));
-
     /*usamos marcadores para dividir las clases del automata*/
     checkpoint = arrayIni(CHECK);
-
-    printf("tamanio check: %d\n", numero_valores(checkpoint));
 
     /*El primer marcador corresponde al primer indice de tabla | x = 0*/
     checkpoint[x] = 0;
     x++;
-    printf("tamanio check: %d\n", numero_valores(checkpoint));
+    
     /*Introducimos los valores del afd en nuestro array*/
     j = 0;
     for(i = 0; i < AFNDNumEstados(afnd); i++){
         if(AFNDTipoEstadoEn(afnd, i) == FINAL || AFNDTipoEstadoEn(afnd, i) == INICIAL_Y_FINAL){
             tabla[j]= i;
-            printf("%d \n", tabla[j]);
             j++;
         }
 
@@ -66,7 +61,6 @@ AFND * AFNDMinimiza(AFND * afnd){
     for(i = 0; i < AFNDNumEstados(afnd); i++){
         if(AFNDTipoEstadoEn(afnd, i) == NORMAL || AFNDTipoEstadoEn(afnd, i) == INICIAL){
             tabla[j]= i;
-            printf("%d \n", tabla[j]);
             j++;
         }
 
@@ -112,23 +106,31 @@ AFND * AFNDMinimiza(AFND * afnd){
 
             /*Creamos una tabla de transiciones para la clase que estamos comprobando*/
             ttran = (int**)calloc(checkpoint[i+1] - checkpoint[i], sizeof(int*));
-
+            ini = checkpoint[i];
             for(j = 0; j < checkpoint[i+1] - checkpoint[i]; j++){
-
+                
                 ttran[j] = arrayIni(AFNDNumSimbolos(afnd));
 
+                printf("\nEstado %d\n", j);
                 for(k = 0; k < AFNDNumSimbolos(afnd); k++){
-
+                    
+                    printf("Simbolo %s\n", AFNDSimboloEn(afnd, k));
                     for (l = 0; l < AFNDNumEstados(afnd); l++){
 
-                        if(AFNDTransicionIndicesEstadoiSimboloEstadof(afnd, j, k, l) == 1){
-
+                        if(AFNDTransicionIndicesEstadoiSimboloEstadof(afnd, tabla[ini], k, l) == 1){
                         /*Creamos la matriz con las clases de los estados a los que transita nuestro estado actual*/
                         ttran[j][k] = estadoEnClase(l, checkpoint, tabla);
+                        printf("Est: %d | ttran: %d\n", l, ttran[j][k]);
+                        
                         }
+                        
                     }
+                    
                 }
+                ini++;
             }
+
+
 
             /*Creamos un array con el cual crearemos la division de clases de la clase actual*/
             clases = arrayIni(checkpoint[i+1] - checkpoint[i]);
@@ -162,6 +164,8 @@ AFND * AFNDMinimiza(AFND * afnd){
 
             }
 
+            arrayPrint("Clases antes de cont > 1", clases);
+
             /*Si de la clase actual se han sacado 2 clases o mas hacemos lo siguiente*/
             if(cont > 1){
 
@@ -186,25 +190,25 @@ AFND * AFNDMinimiza(AFND * afnd){
                 clases = arraySort(clases);
 
                 numcheck = numero_valores(checkpoint) + numero_valores_distintos(clases) - 1;
+
                 printf("\n");
                 arrayPrint("CHEckAWUI", checkpoint);
-                printf("numcheck:%d\tnumvalores:%d\n",numcheck,numero_valores(checkpoint));
-                printf("Nuero distintos:%d\n",numero_valores_distintos(clases));
+                printf("numcheck:%d\tnumvalores:%d\n",numcheck, numero_valores(checkpoint));
 
-                checkpoint = arrayAjustar(checkpoint,numcheck);
-                /*(int*)realloc(checkpoint, numcheck);*/
-                /*Ajuste de tam*/
-
-
-
+                checkpoint = arrayAjustar(checkpoint, numero_valores(checkpoint), numcheck);       
                 l = ini;
+
+                arrayPrint("Clases precheck", clases);
                 for(k = 0; k < numero_valores(clases) - 1; k++){
                     if(clases[k] != clases[k+1]){
+                        /*printf("CMP clases %d: %d %d\n",k, clases[k], clases[k+1]);*/
                         checkpoint[x] = l+1;
-                        x++;
-                        l++;
+                        x++;      
                     }
+                    l++;
                 }
+
+                arrayPrint("Check post realloc", checkpoint);
 
                 checkpoint = arraySort(checkpoint);
 
@@ -218,37 +222,42 @@ AFND * AFNDMinimiza(AFND * afnd){
 
     /*Crear nuevo AFD con los valores de Tabla*/
 
-    ret = AFNDNuevo(AFNDNombre(afnd), 1, AFNDNumSimbolos(afnd));
+    ret = AFNDNuevo(AFNDNombre(afnd), numero_valores(checkpoint)-1, AFNDNumSimbolos(afnd));
 
     /*Insertamos los símbolos*/
     for(i = 0; i < AFNDNumSimbolos(ret); i++){
         AFNDInsertaSimbolo(ret, AFNDSimboloEn(afnd, i));
     }
 
-    /*Insertamos los estados
+    arrayPrint("TABLAFINAL", tabla);
+
+    /*Insertamos los estados*/
     for(i = 0; i < numero_valores(checkpoint) -1; i++){
-        nombre = itoa(i, DECIMAL);
-        nombre = strcat(nombre, "q");
 
+        AFNDInsertaEstado(ret, AFNDNombreEstadoEn(afnd, tabla[checkpoint[i]]), obtenerEstado(afnd, tabla, checkpoint, i));
 
-        AFNDInsertaEstado(ret, nombre, AFNDTipoEstadoEn(afnd, tabla[checkpoint[i]]));
     }
-    */
-    /*Insertamos las transiciones
-    for(i = 0; i < numero_valores(checkpoint) -1; i++){
+    
+    /*Insertamos las transiciones*/
+    for(i = 0; i < numero_valores(tabla); i++){
         for(j = 0; j < AFNDNumSimbolos(ret); j++){
-            for(k = 0; k < numero_valores(checkpoint) -1; k++){
-                if(AFNDTransicionIndicesEstadoiSimboloEstadof(afnd, tabla[checkpoint[i]], j, tabla[checkpoint[j]]) == 1){
-                    AFNDInsertaTransicion(ret, nombre, AFNDSimboloEn(ret, j), nombre);
+            for(k = 0; k < numero_valores(tabla); k++){
+                if(AFNDTransicionIndicesEstadoiSimboloEstadof(afnd, i, j, k) == 1){
+                    ini = estadoEnClase(i, checkpoint, tabla);
+                    fin = estadoEnClase(k, checkpoint, tabla);
+
+                    printf("ini: %d fin: %d\n", ini, fin);
+                    
+                    AFNDInsertaTransicion(ret, AFNDNombreEstadoEn(afnd, tabla[checkpoint[ini]]), AFNDSimboloEn(ret, j), AFNDNombreEstadoEn(afnd, tabla[checkpoint[fin]]));
+                    
                 }
             }
-
         }
     }
-    */
 
-    AFNDInsertaEstado(ret, "TEST", INICIAL_Y_FINAL);
-    AFNDInsertaTransicion(ret, "TEST", AFNDSimboloEn(ret, 0), "TEST");
+
+
+    /*AFNDInsertaTransicion(ret, "|q0|", AFNDSimboloEn(ret, 0), "|q1|");*/
 
     free(checkpoint);
     free(tabla);
@@ -268,9 +277,9 @@ int * claseSort(int *c, int *t, int ini, int fin){
 
     aux=arrayIni(numero_valores(c));
 
-    printf("Ini:%d\n", ini);
+    printf("CsortIni:%d\n", ini);
     arrayPrint("CLASES", c);
-    arrayPrint("T:", t);
+    arrayPrint("TablaSinOrdenar", t);
     printf("numero_valores:%d\n",numero_valores(c) );
     l = 0;
     for(i = 0; i <= valor_maximo(c); i++){
@@ -286,14 +295,14 @@ int * claseSort(int *c, int *t, int ini, int fin){
             k++;
         }
     }
-    arrayPrint("AUX:", aux);
+    arrayPrint("TablaAuxiliar", aux);
 
 
     for(i = 0, k=ini; i < numero_valores(c); i++,k++){
         t[k] = aux[i];
     }
 
-    arrayPrint("TABLA2.0", t);
+    arrayPrint("TablaOrdenada", t);
 
     free(aux);
 
@@ -313,6 +322,7 @@ int valor_maximo(int *a){
 int numero_valores(int* array){
     int i=0;
     if (!array) return -1;
+
     while(array[i]!=-1){
         if(array[i]==FIN){
             break;
@@ -325,7 +335,7 @@ int numero_valores(int* array){
 
 /*La funcion unicamente funciona si el array está ordenado*/
 int numero_valores_distintos(int* array){
-    int i, x = 0;
+    int i, x = 1;
     if(!array) return -1;
 
     arrayPrint("FUNCION VALORES DISTINTOS", array);
@@ -340,7 +350,7 @@ void free_double_pointer(int ** dp, int limite){
     int i = 0;
     if(!dp) return;
 
-    while(i<limite && dp[i]!=NULL ){
+    while(i<limite && dp[i] != NULL){
         free(dp[i]);
         i++;
     }
@@ -387,6 +397,12 @@ int estadoEnClase(int x, int *check, int *tabla){
         }
     }
 
+    /**
+     * tabla[0,4,8,  1,5,9, 2,6,10]
+     * check[0,3,6,   9]
+     *       0 1 2    3
+     * */
+
     return -1;
 }
 
@@ -431,7 +447,7 @@ void arrayPrint(char *n, int *a){
 
     printf("%s: [", n);
 
-    for(i = 0; i < numero_valores(a); i++){
+    for(i = 0; i < numero_valores(a)+1; i++){
         printf("%d, ", a[i]);
     }
     printf("]\n");
@@ -455,22 +471,50 @@ int* arrayIni(int tam){
 }
 
 
-int *arrayAjustar(int *checkpoint, int tam){
-    int i=0, *array=NULL;
+int *arrayAjustar(int *checkpoint, int tamI, int tamF){
+    int i;
     if(!checkpoint) return NULL;
 
-    array=arrayIni(tam);
+    printf("TAM_I:%d\n",tamI);
+    printf("TAM_F:%d\n",tamF);
 
-    printf("\n");
-    arrayPrint("checkpoint", checkpoint);
-    printf("TAM+:%d",tam);
-
-    for(i=0;i<numero_valores(checkpoint);i++){
-        array[i]=checkpoint[i];
+    checkpoint = (int*)realloc(checkpoint, (tamF+1)*sizeof(int));
+    for(i= tamI; i<tamF; i++){
+        checkpoint[i] = -1;
+        printf("Pos: %d Ci: %d\n", i, checkpoint[i]);
     }
-    arrayPrint("arrayAjustar", array);
-    return array;
+    
+    checkpoint[i] = FIN;
+    printf("Pos: %d Ci: %d\n", i, checkpoint[i]);
+    printf("numvalores %d\n", numero_valores(checkpoint));
+
+    return checkpoint;
 }
+
+int obtenerEstado(AFND *afnd, int *tabla, int *checkpoint, int x){
+    int i, estado = NORMAL;
+
+    if(!afnd || !tabla || !checkpoint || x<0) return -1;
+
+    for(i = checkpoint[x]; i < checkpoint[x+1]; i++){
+        if(AFNDTipoEstadoEn(afnd, tabla[i]) == INICIAL_Y_FINAL){
+            estado = INICIAL_Y_FINAL;
+
+            return estado;
+        }
+
+        if(AFNDTipoEstadoEn(afnd, tabla[i]) == FINAL){
+            estado = FINAL;
+        }
+        if(AFNDTipoEstadoEn(afnd, tabla[i]) == INICIAL){
+            estado = INICIAL;
+        }
+
+    }
+
+    return estado;
+}
+
 
 /*clases[0, 0, 1]*/
 /*tabla [|5, 7,| 6|]*/
