@@ -51,7 +51,7 @@ AFND * AFNDMinimiza(AFND * afnd){
     /*El primer marcador corresponde al primer indice de tabla | x = 0*/
     checkpoint[x] = 0;
     x++;
-    
+
     /*Introducimos los valores del afd en nuestro array*/
     j = 0;
     for(i = 0; i < numero_valores(tablabfs); i++){
@@ -118,13 +118,15 @@ AFND * AFNDMinimiza(AFND * afnd){
             /*Creamos una tabla de transiciones para la clase que estamos comprobando*/
             ttran = (int**)calloc(checkpoint[i+1] - checkpoint[i], sizeof(int*));
             ini = checkpoint[i];
+
+            limite = checkpoint[i+1] - checkpoint[i];
             for(j = 0; j < checkpoint[i+1] - checkpoint[i]; j++){
-                
+
                 ttran[j] = arrayIni(AFNDNumSimbolos(afnd));
 
                 printf("\nEstado %d\n", j);
                 for(k = 0; k < AFNDNumSimbolos(afnd); k++){
-                    
+
                     printf("Simbolo %s\n", AFNDSimboloEn(afnd, k));
                     for (l = 0; l < AFNDNumEstados(afnd); l++){
 
@@ -132,11 +134,11 @@ AFND * AFNDMinimiza(AFND * afnd){
                         /*Creamos la matriz con las clases de los estados a los que transita nuestro estado actual*/
                         ttran[j][k] = estadoEnClase(l, checkpoint, tabla);
                         printf("Est: %d | ttran: %d\n", l, ttran[j][k]);
-                        
+
                         }
-                        
+
                     }
-                    
+
                 }
                 ini++;
             }
@@ -206,7 +208,7 @@ AFND * AFNDMinimiza(AFND * afnd){
                 arrayPrint("CHEckAWUI", checkpoint);
                 printf("numcheck:%d\tnumvalores:%d\n",numcheck, numero_valores(checkpoint));
 
-                checkpoint = arrayAjustar(checkpoint, numero_valores(checkpoint), numcheck);       
+                checkpoint = arrayAjustar(checkpoint, numero_valores(checkpoint), numcheck);
                 l = ini;
 
                 arrayPrint("Clases precheck", clases);
@@ -214,7 +216,7 @@ AFND * AFNDMinimiza(AFND * afnd){
                     if(clases[k] != clases[k+1]){
                         /*printf("CMP clases %d: %d %d\n",k, clases[k], clases[k+1]);*/
                         checkpoint[x] = l+1;
-                        x++;      
+                        x++;
                     }
                     l++;
                 }
@@ -226,7 +228,6 @@ AFND * AFNDMinimiza(AFND * afnd){
             }
 
             free(clases);
-            limite = checkpoint[i+1] - checkpoint[i];
             free_double_pointer(ttran,limite);
         }
     }
@@ -249,7 +250,7 @@ AFND * AFNDMinimiza(AFND * afnd){
         AFNDInsertaEstado(ret, AFNDNombreEstadoEn(afnd, tabla[checkpoint[i]]), obtenerEstado(afnd, tabla, checkpoint, i));
 
     }
-    
+
     /*Insertamos las transiciones*/
     for(i = 0; i < numero_valores(tabla); i++){
         for(j = 0; j < AFNDNumSimbolos(ret); j++){
@@ -260,9 +261,9 @@ AFND * AFNDMinimiza(AFND * afnd){
 
                     printf("ini: %d i: %d fin: %d k: %d\n", ini, i, fin, k);
                     printf("Tabla[i]: %d\n", tabla[i]);
-                    
+
                     AFNDInsertaTransicion(ret, AFNDNombreEstadoEn(afnd, tabla[checkpoint[ini]]), AFNDSimboloEn(ret, j), AFNDNombreEstadoEn(afnd, tabla[checkpoint[fin]]));
-                    
+
                 }
             }
         }
@@ -477,7 +478,7 @@ int *arrayAjustar(int *checkpoint, int tamI, int tamF){
         checkpoint[i] = -1;
         printf("Pos: %d Ci: %d\n", i, checkpoint[i]);
     }
-    
+
     checkpoint[i] = FIN;
     printf("Pos: %d Ci: %d\n", i, checkpoint[i]);
     printf("numvalores %d\n", numero_valores(checkpoint));
@@ -527,7 +528,7 @@ int * bfs (AFND *afd){
                if(AFNDTransicionIndicesEstadoiSimboloEstadof(afd, k, j, i) == 1){
                    printf("Transicion: %d -> %d -> %d\n", k, j, i);
                    flag = TRUE;
-               } 
+               }
             }
         }
 
@@ -541,4 +542,3 @@ int * bfs (AFND *afd){
 
     return ret;
 }
-
