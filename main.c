@@ -8,6 +8,9 @@ int main(int argc, char ** argv)
 
 	AFND * p_afnd;
 	AFND * p_afnd_min;
+	FILE *f = fopen("afd1.txt", "w");
+
+	if(!f) return -1;
 
 	p_afnd = AFNDNuevo("af1",12,2);
 
@@ -94,9 +97,12 @@ int main(int argc, char ** argv)
 
 	AFNDADot(p_afnd_min);
 	AFNDImprime(stdout,p_afnd_min);
+	AFNDImprime(f,p_afnd_min);
 
 	AFNDElimina(p_afnd);
 	AFNDElimina(p_afnd_min);
+
+	fclose(f);
 
 	return 0;
 
